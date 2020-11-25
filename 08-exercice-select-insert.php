@@ -11,8 +11,17 @@ try {
 }
 
 // Votre code d'insertion se met ici
+if(!empty($_POST)){
 
+$thelogin  = htmspecialchars(strip_tags(trim($_POST['thelogin'])),ENT_QUOTES);
+$thepwd = htmspecialchars(strip_tags(trim($_POST['thepwd'])),ENT_QUOTES);
+$thename = htmspecialchars(strip_tags(trim($_POST['thename'])),ENT_QUOTES);
+if(!empty($thelogin)&&!empty($thepwd)&&!empty($thename)){
 
+$sql = "INSERT INTO users(thelogin,thepwd,thename) VALUES ('$thelogin','$thepwd','$thename');";
+$insert = $connexion->query($sql);
+}
+}
 // récupération de données
 $sql="SELECT * FROM users;";
 $recup = $connexion->query($sql);

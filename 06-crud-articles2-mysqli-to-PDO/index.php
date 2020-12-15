@@ -10,7 +10,9 @@ require_once "config.php";
 require_once "model/connectDB.php";
 
 // DB connection
-$db = connectDB();
+/*$db = connectDB();*/
+$db = connectPDO();
+var_dump($db);
 
 // connect error
 if(!$db){

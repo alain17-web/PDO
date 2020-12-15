@@ -1,6 +1,6 @@
 <?php
 // Load all articles with author
-function articlesLoadAll($cdb){
+/*function articlesLoadAll($cdb){
     $req = "SELECT * FROM articles a 
 	INNER JOIN users u 
 		ON a.users_idusers = u.idusers
@@ -13,10 +13,23 @@ ORDER BY a.thedate DESC;";
     }
     // no result
     return false;
+}*/
+
+function articlesLoadAll($db){
+
+    $req = $connect->query("SELECT * FROM articles a 
+	INNER JOIN users u 
+		ON a.users_idusers = u.idusers
+    ORDER BY a.thedate DESC");
+
+    $recup = $req->fetchAll(PDO::FETCH_ASSOC);
+
+    return $recup;
+    
 }
 
 // Load all articles with author but with 300 caracters from "texte"
-function articlesLoadAllResume($cdb){
+/*function articlesLoadAllResume($db){
     $req = "SELECT a.idarticles, a.titre, LEFT(a.texte,300) AS texte, a.thedate, u.idusers, u.thename 
 FROM articles a 
 	INNER JOIN users u 
@@ -30,17 +43,38 @@ ORDER BY a.thedate DESC;";
     }
     // no result
     return false;
+}*/
+
+function articlesLoadAllResume($db){
+
+    $req = $connect->query("SELECT a.idarticles, a.titre, LEFT(a.texte,300) AS texte, a.thedate, u.idusers, u.thename 
+    FROM articles a 
+        INNER JOIN users u 
+            ON a.users_idusers = u.idusers
+    ORDER BY a.thedate DESC");
+    $recup = $req->fetchAll(PDO::FETCH_ASSOC);
+
+    return $recup;
 }
 
 // Count number of articles
-function countAllArticles($c){
+/*function countAllArticles($c){
     // le count renvoie une ligne de résultat avec le nombre d'articles, utiliser la clef primaire permet d'éviter qu'il compte réellement le nombre d'articles: c'est un résultat se trouvant en début du code de la table (dans l'index)
     $req = "SELECT COUNT(idarticles) AS nb
 FROM articles";
     $recup = mysqli_query($c,$req);
     $out = mysqli_fetch_assoc($recup);
     return $out["nb"];
+}*/
+
+function countAllArticles($db){
+
+    $req = $connect->query("SELECT COUNT(idarticles) AS nb
+    FROM articles");
+    $out=$req->fetch(PDO::FETCH_OBJ);
+    return $out["nb"];
 }
+
 
 // Load all articles with author but with 300 caracters from "texte" with pagination LIMIT
 function articlesLoadResumePagination($cdb,$begin,$nbperpage=10){
@@ -61,6 +95,10 @@ LIMIT $begin, $nbperpage;";
     // no result
     return false;
 }
+
+/*function articlesLoadResumePagination($db,$begin,$nbperpage=10){
+
+}*/
 
 // LOAD full article with ID
 function articleLoadFull($connect,$id){

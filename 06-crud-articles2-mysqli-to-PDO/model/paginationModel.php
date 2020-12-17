@@ -18,7 +18,7 @@ function paginationModel($nb_tot_item,$current_page,$nb_per_page=10,$URL_VAR="",
 
     // pour obtenir le nombre total de page, on divise le nombre total d'éléments affichables $nb_tot_item par le nombre d'éléments affichables par page, le tout arrondit à l'entier supérieur ceil()
     $nb_pages = ceil($nb_tot_item/$nb_per_page);
-
+    
     // si on a qu'une seule page
     if($nb_pages<2){
         // on affiche une chaîne vide

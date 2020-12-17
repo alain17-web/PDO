@@ -55,7 +55,7 @@ if(isset($_GET["detailArticle"])){
     }
     // appel de la fonction du modèle articlesModel.php
     $recup = articleLoadFull($db,$idArticles);
-    var_dump($recup);
+    /*var_dump($recup);*/
     // pas d'article, la page n'existe pas
     if(!$recup){
         $erreur = "Cet article n'existe plus";
@@ -81,6 +81,8 @@ if(isset($_GET['pg'])){
 }
 // calcul pour la requête - nombre d'articles totaux, sans erreurs SQL ce sera toujours un int, de 0 à ...
 $nbTotalArticles = countAllArticles($db);
+var_dump($nbTotalArticles);
+
 
 // Calcul pour avoir la première partie du LIMIT *, 5 dans la requête stockée dans articlesModel.php nommée articlesLoadResumePagination()
 $debut_tab = ($pgactu-1)*NUMBER_ARTICLE_PER_PAGE;

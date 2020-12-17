@@ -13,6 +13,7 @@ if(isset($_GET['p'])&&$_GET['p']=="disconnect"){
     disconnectModel();
     header("Location: ./");
     exit;
+    
 }
 
 // si on est sur le détail d'un article
@@ -26,7 +27,7 @@ if(isset($_GET["detailArticle"])){
     }
     // appel de la fonction du modèle articlesModel.php
     $recup = articleLoadFull($db,$idArticles);
-    var_dump($recup);
+    
     // pas d'article, la page n'existe pas
     if(!$recup){
         $erreur = "Cet article n'existe plus";

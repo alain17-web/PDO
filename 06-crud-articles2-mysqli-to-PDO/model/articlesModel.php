@@ -9,6 +9,7 @@ ORDER BY a.thedate DESC;";
     // si au moins 1 résultat
     if(mysqli_num_rows($recup)){
         // on utilise le fetch all car il peut y avoir plus d'un résultat
+        
         return mysqli_fetch_all($recup,MYSQLI_ASSOC);
     }
     // no result
@@ -55,29 +56,30 @@ function articlesLoadAllResume($db){
     $recup = $req->fetchAll(PDO::FETCH_ASSOC);
 
     return $recup;
+    
 }
 
 // Count number of articles
-/*function countAllArticles($c){
+/*function countAllArticles($db){
     // le count renvoie une ligne de résultat avec le nombre d'articles, utiliser la clef primaire permet d'éviter qu'il compte réellement le nombre d'articles: c'est un résultat se trouvant en début du code de la table (dans l'index)
     $req = "SELECT COUNT(idarticles) AS nb
 FROM articles";
-    $recup = mysqli_query($c,$req);
+    $recup = mysqli_query($db,$req);
     $out = mysqli_fetch_assoc($recup);
     return $out["nb"];
 }*/
 
 function countAllArticles($db){
 
-    $req = $connect->query("SELECT COUNT(idarticles) AS nb
-    FROM articles");
-    $out=$req->fetch(PDO::FETCH_OBJ);
-    return $out["nb"];
+    $req = $db->query("SELECT COUNT(idarticles) FROM articles"); 
+    $out = $req->fetch(PDO::FETCH_ASSOC); 
+    $recup = (int)$out;
+    return $recup;
 }
 
 
 // Load all articles with author but with 300 caracters from "texte" with pagination LIMIT
-function articlesLoadResumePagination($cdb,$begin,$nbperpage=10){
+/*function articlesLoadResumePagination($cdb,$begin,$nbperpage=10){
     $begin = (int) $begin;
     $nbperpage = (int) $nbperpage;
     $req = "SELECT a.idarticles, a.titre, LEFT(a.texte,300) AS texte, a.thedate, u.idusers, u.thename 
@@ -94,14 +96,35 @@ LIMIT $begin, $nbperpage;";
     }
     // no result
     return false;
-}
-
-/*function articlesLoadResumePagination($db,$begin,$nbperpage=10){
-
 }*/
 
+function articlesLoadResumePagination($db,$begin,$nbperpage=10){
+
+    $begin = (int) $begin;
+    $nbperpage = (int) $nbperpage;
+
+    $req = "SELECT a.idarticles, a.titre, LEFT(a.texte,300) AS texte, a.thedate, u.idusers, u.thename 
+    FROM articles a 
+        INNER JOIN users u 
+            ON a.users_idusers = u.idusers
+    ORDER BY a.thedate DESC 
+    LIMIT $begin, $nbperpage;";
+
+    $prepare = $db->prepare($req);
+    $prepare->bindParam(1,$begin,PDO::PARAM_INT);
+    $prepare->bindParam(2,$nbperpage,PDO::PARAM_INT);
+
+    $prepare->execute();
+
+    if($prepare->rowCount()){
+        return $prepare->fetchAll(PDO::FETCH_ASSOC);
+    }
+        return false;
+
+}
+
 // LOAD full article with ID
-function articleLoadFull($connect,$id){
+/*function articleLoadFull($connect,$id){
     $id = (int) $id;
     $req = "SELECT * FROM articles a 
 	INNER JOIN users u 
@@ -115,22 +138,68 @@ function articleLoadFull($connect,$id){
     }
     // no result
     return false;
+}*/
+
+function articleLoadFull($connect,$id){
+
+    $id = (int) $id;
+    $req = "SELECT * FROM articles a 
+	INNER JOIN users u 
+		ON a.users_idusers = u.idusers
+    WHERE a.idarticles=?;";
+
+    $prepare = $connect->prepare($req);
+    $prepare->bindValue(1,$id,PDO::PARAM_INT);
+    $prepare->execute();
+
+    if($prepare->rowCount()){
+        $recup = $prepare->fetch(PDO::FETCH_ASSOC);
+        return $recup;
+    }
+        return false;
 }
 
 // insertion d'un nouvel article
-function insertArticle($c,$title,$text,$id){
+/*function insertArticle($c,$title,$text,$id){
 
     $sql="INSERT INTO articles (titre,texte,users_idusers) VALUES ('$title','$text',$id);";
     $request = mysqli_query($c,$sql);
     return ($request)?true:false;
+}*/
+
+function insertArticle($db,$title,$text,$id){
+
+    $sql="INSERT INTO articles (titre,texte,users_idusers) VALUES (?,?,?);";
+
+    $prepareInsert = $db->prepare($sql);
+    $prepareInsert->bindParam(1,$title,PDO::PARAM_STR);
+    $prepareInsert->bindParam(2,$text,PDO::PARAM_STR);
+    $prepareInsert->bindValue(3,$id,PDO::PARAM_INT);
+
+    $prepareInsert->execute();
+
+    return ($prepareInsert)?true:false;
+
 }
 
 // suppression d'un article via son ID
 
-function deleteArticle($connect,$id){
+/*function deleteArticle($connect,$id){
     $id = (int) $id;
     $sql="DELETE FROM articles WHERE idarticles=$id";
     return (@mysqli_query($connect,$sql))? true : false;
+}*/ 
+
+function deleteArticle($connect,$id){
+    $id = (int) $id;
+    $sql="DELETE FROM articles WHERE idarticles = ?;";
+
+    $prepareDelete = $connect->prepare($sql);
+    //$prepareDelete->bindValue(1,$id,PARAM_INT);
+
+    $prepareDelete->execute([$id]);
+
+    return ($prepareDelete)? true : false;
 }
 
 /*
@@ -140,7 +209,7 @@ function deleteArticle($connect,$id){
  * $id -> variable GET idarticles
  */
 
-function updateArticle($db,$datas,$id){
+/*function updateArticle($db,$datas,$id){
     // traîtement des variables
     // $_GET
     $id = (int) $id;
@@ -170,4 +239,43 @@ function updateArticle($db,$datas,$id){
    return (mysqli_query($db,$sql))? true : "Erreur inconnue lors de la modification, Veuillez recommencer";
 
 
+}*/
+
+function updateArticle($db,$datas,$id){
+    // traîtement des variables
+    // $_GET
+    $id = (int) $id;
+    // $_POST => on pourrait utiliser extract(), plus rapide mais dangereux et non sécurisé sans mettre les mêmes lignes que celles ci-dessous
+    $idarticles = (int) $datas['idarticles'];
+    $titre = htmlspecialchars(strip_tags(trim($datas['titre'])),ENT_QUOTES);
+    // exception pour le strip_tags qui va accepter les balises html entre allowable_tags
+    $texte= htmlspecialchars(strip_tags(trim($datas['texte']),'<p><br><a><img><h4><h5><b><strong><i><ul><li>'),ENT_QUOTES);
+    $thedate = htmlspecialchars(strip_tags(trim($datas['thedate'])),ENT_QUOTES);
+
+    // on vérifie si la date valide existe dans la chaîne, si oui elle est mise dans $tab et séparée du reste
+    $tab = preg_grep("/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/",[$thedate]);
+    // si on ne la trouve pas, on met la date du jour
+    if(empty($tab)) $thedate = date("Y-m-d H:i:s");
+
+
+    $users_idusers = (int) $datas['users_idusers'];
+
+    // quelqu'un essaie de modifier un autre article que celui affiché
+    if($id!=$idarticles) return "Inutile d'essayer de supprimer un article de quelqu'un d'autre";
+
+    if(empty($id)||empty($idarticles)||empty($titre)||
+        empty($texte)||empty($thedate)||empty($users_idusers)) return "Vos champs ne sont pas correctement remplis";
+
+    $sql ="UPDATE articles SET titre = :titre, texte = :texte,thedate = :thedate, users_idusers= :users_idusers WHERE idarticles = :idarticles";
+
+    $prepareUpdate = $db->prepare($sql);
+
+    $prepareUpdate->execute([
+                            ':titre' => $titre,
+                            ':texte' => $texte,
+                            ':thedate'=> $thedate,
+                            ':users_idusers'=> $users_idusers,
+                            ':idarticles'=> $idarticles]);
+    
+     return ($prepareUpdate)?true : false;               
 }

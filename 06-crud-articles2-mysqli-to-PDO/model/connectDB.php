@@ -15,14 +15,14 @@
 
 //PDO
 
-function connectPDO(){
+function connectDB(){
     
     try{
-        $connect = new PDO('mysql:host='.DB_HOST.";dbname=".DB_NAME.";charset=".DB_CHARSET.";port=".DB_PORT,DB_USER,DB_PWD);
+        $connect = new PDO(DB_TYPE.":host=".DB_HOST.";dbname=".DB_NAME.";charset=".DB_CHARSET.";port=".DB_PORT,DB_USER,DB_PWD);
 
-        $connect->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
-        
         return $connect;
+        
+
     }
     catch(PDOException $e){
         $erreur = $e->getCode();
@@ -30,7 +30,7 @@ function connectPDO(){
         $erreur .= $e->getMessage();
         
         die($erreur);
-    } 
+    }
 
     
 }
